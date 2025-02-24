@@ -6,7 +6,7 @@ services:
     container_name: audiobooks-manager
     restart: unless-stopped
     ports:
-      - "53509:53509"
+      - "56176:53509"
     environment:
       - DATABASE_URL=postgresql://postgres:postgres@db:5432/postgres  # Anpassen an Ihre DB-Konfiguration
     networks:
