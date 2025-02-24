@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RSS Items Manager</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .item {
+            border: 1px solid #ddd;
+            margin: 10px 0;
+            padding: 15px;
+            border-radius: 5px;
+        }
+        .edit-form {
+            display: none;
+        }
+        .edit-form input, .edit-form textarea {
+            width: 100%;
+            margin: 5px 0;
+            padding: 5px;
+        }
+        .button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        .delete-button {
+            background-color: #f44336;
+        }
+    </style>
+</head>
+<body>
+    <h1>RSS Items Verwaltung</h1>
+    <div id="items-container"></div>
+
+    <script>
+        function fetchItems() {
+            fetch('/api/rss-items')
+                .then(response => response.json())
+                .then(items => {
+                    const container = document.getElementById('items-container');
+                    container.innerHTML = '';
+                    items.forEach(item => {
+                        const itemElement = createItemElement(item);
+                        container.appendChild(itemElement);
+                    });
+                })
+                .catch(error => console.error('Error:', error));
+        }
+
+        function createItemElement(item) {
+            const div = document.createElement('div');
+            div.className = 'item';
+            div.innerHTML = `
+                <h2>${item.title}</h2>
+                <p><strong>Link:</strong> <a href="${item.link}" target="_blank">${item.link}</a></p>
+                <p><strong>Beschreibung:</strong> ${item.description}</p>
+                <p><strong>Veröffentlicht:</strong> ${item.pub_date}</p>
+                <button class="button" onclick="toggleEdit(${item.id})">Bearbeiten</button>
+                <button class="button delete-button" onclick="deleteItem(${item.id})">Löschen</button>
+                
+                <div id="edit-form-${item.id}" class="edit-form">
+                    <input type="text" id="title-${item.id}" value="${item.title}">
+                    <input type="text" id="link-${item.id}" value="${item.link}">
+                    <textarea id="description-${item.id}">${item.description}</textarea>
+                    <button class="button" onclick="saveItem(${item.id})">Speichern</button>
+                </div>
+            `;
+            return div;
+        }
+
+        function toggleEdit(id) {
+            const form = document.getElementById(`edit-form-${id}`);
+            form.style.display = form.style.display === 'none' ? 'block' : 'none';
+        }
+
+        function saveItem(id) {
+            const data = {
+                title: document.getElementById(`title-${id}`).value,
+                link: document.getElementById(`link-${id}`).value,
+                description: document.getElementById(`description-${id}`).value
+            };
+
+            fetch(`/api/rss-items/${id}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(data)
+            })
+            .then(response => response.json())
+            .then(() => {
+                fetchItems();
+                toggleEdit(id);
+            })
+            .catch(error => console.error('Error:', error));
+        }
+
+        function deleteItem(id) {
+            if (confirm('Möchten Sie diesen Eintrag wirklich löschen?')) {
+                fetch(`/api/rss-items/${id}`, {
+                    method: 'DELETE'
+                })
+                .then(response => response.json())
+                .then(() => fetchItems())
+                .catch(error => console.error('Error:', error));
+            }
+        }
+
+        // Initial load
+        fetchItems();
+    </script>
+</body>
+</html>

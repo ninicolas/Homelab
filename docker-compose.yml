@@ -1,0 +1,17 @@
+version: '3.8'
+
+services:
+  web:
+    build: .
+    ports:
+      - "53509:53509"
+    environment:
+      - DATABASE_URL=postgresql://postgres:postgres@db:5432/postgres  # Diese URL entsprechend Ihrer bestehenden DB anpassen
+    volumes:
+      - .:/app
+    networks:
+      - existing_network  # Name Ihres bestehenden Docker-Netzwerks
+
+networks:
+  existing_network:
+    external: true  # Dies verbindet mit einem bestehenden Netzwerk
